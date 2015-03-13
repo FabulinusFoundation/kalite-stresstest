@@ -23,7 +23,7 @@ public class Logger {
     public void log(String message, LogLevel logLevel){
         for (LogListener listener : listeners) {
             String timestamp = dateFormat.format(new Date());
-            String content = String.format("%s [%s]: %s", prefix, timestamp, message);
+            String content = String.format("%s [%s](%s): %s", prefix, timestamp, logLevel, message);
             listener.log(content, logLevel);
         }
     }

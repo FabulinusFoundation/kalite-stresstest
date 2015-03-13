@@ -17,11 +17,17 @@ public class User extends Thread{
     private final String HOST;
     private final int PORT;
     private final Logger LOGGER;
+    private final long defaultTimeout;
 
     public User(String host, int port, Logger logger) {
+        this(host, port, logger, 1000);
+    }
+
+    public User(String host, int port, Logger logger, long defaultTimeout){
         this.HOST = removeProtocol(host);
         this.PORT = port;
         this.LOGGER = logger;
+        this.defaultTimeout = defaultTimeout;
     }
 
     private String removeProtocol(String url) {
@@ -37,10 +43,10 @@ public class User extends Thread{
         LOGGER.log("Starting new user [" + toString() + "].", LogLevel.INFO);
         while(!isInterrupted()){
             accessContent();
-            int timeout = (int) ((Math.random()*500) + 500);
-            LOGGER.log("User [" + toString() + "] pausing for " + timeout + "ms.", LogLevel.INFO);
+            long rndTimeout = calculateTimeout();
+            LOGGER.log("User [" + toString() + "] pausing for " + rndTimeout + "ms.", LogLevel.INFO);
             try {
-                sleep(timeout);
+                sleep(rndTimeout);
             } catch (InterruptedException i) {
                 LOGGER.log("User [" + toString() + "] finished.", LogLevel.INFO);
                 interrupt();
@@ -66,6 +72,12 @@ public class User extends Thread{
             default:
                 LOGGER.log("Invalid content integer generated.", LogLevel.DEBUG);
         }
+    }
+
+    private long calculateTimeout(){
+        long offset = (long) (defaultTimeout * 0.125);
+        long rndTimeout = (long) ((Math.random()*(defaultTimeout*0.25)));
+        return defaultTimeout - offset + rndTimeout;
     }
 
     //------------------------------- Page -------------------------------//

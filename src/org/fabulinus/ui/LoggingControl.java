@@ -31,12 +31,16 @@ public class LoggingControl extends VBox implements LogListener {
     public LoggingControl() {
         logListView = new ListView<>();
         logEntries = FXCollections.observableArrayList();
-        logListView.itemsProperty().setValue(logEntries);
+        initLogListView();
         logLevelChoiceBox = new ChoiceBox<>();
         addLogLevelChoiceListener();
         autoScroll = new CheckBox("Automatic scrolling");
         addAutoScrollListener();
         setPositions();
+    }
+
+    private void initLogListView(){
+        logListView.itemsProperty().setValue(logEntries);
     }
 
     private void addLogLevelChoiceListener(){
@@ -71,7 +75,7 @@ public class LoggingControl extends VBox implements LogListener {
 
     @Override
     public void log(String content, LogLevel level) {
-        if (logLevel.getLevel() < level.getLevel()){
+        if (logLevel.getLevel() <= level.getLevel()){
             Platform.runLater(() -> {
                 logEntries.add(content);
                 //TODO set color
@@ -83,7 +87,7 @@ public class LoggingControl extends VBox implements LogListener {
         switch (level) {
             case WARN: return "yellow";
             case ERROR: return "red";
-            default: return "green";
+            default: return "black";
         }
     }
 }
