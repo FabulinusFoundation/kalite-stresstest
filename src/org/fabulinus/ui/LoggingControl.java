@@ -7,12 +7,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.fabulinus.logging.LogEntry;
 import org.fabulinus.logging.LogLevel;
 import org.fabulinus.logging.LogListener;
 
@@ -20,8 +18,9 @@ import org.fabulinus.logging.LogListener;
  * Created by Timon on 13.03.2015.
  */
 public class LoggingControl extends VBox implements LogListener {
-    private final ListView<String> logListView;
-    private final ObservableList<String> logEntries;
+    private final ListView<LogEntry> logListView;
+    private final ObservableList<LogEntry> logEntries;
+    private final Label logLevelLabel;
     private final ChoiceBox<LogLevel> logLevelChoiceBox;
     private final CheckBox autoScroll;
 
@@ -32,15 +31,19 @@ public class LoggingControl extends VBox implements LogListener {
         logListView = new ListView<>();
         logEntries = FXCollections.observableArrayList();
         initLogListView();
+        logLevelLabel = new Label("Logging Level:");
         logLevelChoiceBox = new ChoiceBox<>();
         addLogLevelChoiceListener();
-        autoScroll = new CheckBox("Automatic scrolling");
+        autoScroll = new CheckBox();
         addAutoScrollListener();
         setPositions();
     }
 
     private void initLogListView(){
         logListView.itemsProperty().setValue(logEntries);
+        logListView.setCellFactory(
+                (param) -> new LogEntryCell()
+        );
     }
 
     private void addLogLevelChoiceListener(){
@@ -48,13 +51,16 @@ public class LoggingControl extends VBox implements LogListener {
         logLevelChoiceBox.valueProperty().addListener((observable, oldValue, newValue) -> {
             logLevel = newValue;
         });
-        logLevelChoiceBox.setValue(LogLevel.OFF);
+        logLevelChoiceBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+
+        });
+        logLevelChoiceBox.setValue(LogLevel.DEBUG);
     }
 
     private void addAutoScrollListener(){
         scroll = new SimpleBooleanProperty();
         scroll.bind(autoScroll.selectedProperty());
-        logEntries.addListener((ListChangeListener.Change<?extends String> change) -> {
+        logEntries.addListener((ListChangeListener.Change<?extends LogEntry> change) -> {
             if (scroll.get()) {
                 int index = logListView.getItems().size()-1;
                 logListView.scrollTo(index);
@@ -67,27 +73,20 @@ public class LoggingControl extends VBox implements LogListener {
         this.setSpacing(5);
         this.getChildren().add(logListView);
         HBox hbox = new HBox(20);
+        hbox.getChildren().add(new Label("Automatic scrolling:"));
         hbox.getChildren().add(autoScroll);
+        hbox.getChildren().add(logLevelLabel);
         hbox.getChildren().add(logLevelChoiceBox);
         hbox.setAlignment(Pos.CENTER_RIGHT);
         this.getChildren().add(hbox);
     }
 
     @Override
-    public void log(String content, LogLevel level) {
-        if (logLevel.getLevel() <= level.getLevel()){
+    public void log(LogEntry entry) {
+        if (logLevel.value() <= entry.getLogLevel().value()){
             Platform.runLater(() -> {
-                logEntries.add(content);
-                //TODO set color
+                logEntries.add(entry);
             });
-        }
-    }
-
-    private String getColor(LogLevel level){
-        switch (level) {
-            case WARN: return "yellow";
-            case ERROR: return "red";
-            default: return "black";
         }
     }
 }

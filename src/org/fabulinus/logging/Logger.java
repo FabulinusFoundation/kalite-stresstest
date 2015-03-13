@@ -10,21 +10,16 @@ import java.util.List;
  * Created by Timon on 12.03.2015.
  */
 public class Logger {
-    private final DateFormat dateFormat;
     private final List<LogListener> listeners;
-    private final String prefix;
 
-    public Logger(String prefix){
-        this.dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+    public Logger(){
         this.listeners = new ArrayList<>();
-        this.prefix = prefix;
     }
 
-    public void log(String message, LogLevel logLevel){
+    public void log(String message, String tooltip, LogLevel logLevel){
         for (LogListener listener : listeners) {
-            String timestamp = dateFormat.format(new Date());
-            String content = String.format("%s [%s](%s): %s", prefix, timestamp, logLevel, message);
-            listener.log(content, logLevel);
+            LogEntry entry = new LogEntry(logLevel, new Date(), message, tooltip);
+            listener.log(entry);
         }
     }
 

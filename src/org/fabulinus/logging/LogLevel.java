@@ -12,7 +12,7 @@ public enum LogLevel {
         this.level = level;
     }
 
-    public int getLevel() {
+    public int value() {
         return level;
     }
 }

@@ -5,5 +5,5 @@ package org.fabulinus.logging;
  */
 public interface LogListener {
 
-    void log(String content, LogLevel level);
+    void log(LogEntry entry);
 }
