@@ -1,5 +1,6 @@
 package org.fabulinus.client;
 
+import org.fabulinus.logging.LogEntry;
 import org.fabulinus.logging.LogLevel;
 import org.fabulinus.logging.Logger;
 
@@ -7,38 +8,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 
 /**
  * Created by Timon on 12.03.2015.
  */
 public class Client extends Thread{
-    private final String HOST;
-    private final int PORT;
-    private final Logger LOGGER;
+    private final String host;
+    private final int port;
+    private final Logger logger;
     private final long defaultTimeout;
 
-    public Client(String host, int port, Logger logger) {
-        this(host, port, logger, 1000);
-    }
-
     public Client(String host, int port, Logger logger, long defaultTimeout){
-        this.HOST = host;
-        this.PORT = port;
-        this.LOGGER = logger;
+        this.host = host;
+        this.port = port;
+        this.logger = logger;
         this.defaultTimeout = defaultTimeout;
     }
 
     @Override
     public void run() {
-        LOGGER.log("Starting new " + toString(), "", LogLevel.INFO);
+        logger.log("Starting new " + toString(), "", LogLevel.INFO);
         while(!isInterrupted()){
+            Date before = new Date();
             accessContent();
+            Date after = new Date();
+            long elapsed = after.getTime()-before.getTime();
+            if (elapsed > 5000) {
+                logger.log(toString() + ": " + "response required " + elapsed + "ms.", "", LogLevel.WARN);
+            }
             long rndTimeout = calculateTimeout();
-            LOGGER.log(toString() +" sleeping for " + rndTimeout + "ms.", "", LogLevel.DEBUG);
+            logger.log(toString() + " sleeping for " + rndTimeout + "ms.", "", LogLevel.DEBUG);
             try {
                 sleep(rndTimeout);
             } catch (InterruptedException i) {
-                LOGGER.log(toString() + " interrupted.", "", LogLevel.INFO);
+                logger.log(toString() + " interrupted.", "", LogLevel.INFO);
                 interrupt();
             }
         }
@@ -48,15 +52,15 @@ public class Client extends Thread{
         int rnd = (int) (Math.floor(Math.random()*3) + 1); // [1..4)
         switch (rnd) {
             case 1:
-                LOGGER.log(toString() + " browsing page.", "", LogLevel.INFO);
+                logger.log(toString() + " browsing page.", "", LogLevel.INFO);
                 browsePage();
                 return;
             case 2:
-                LOGGER.log(toString() + " streaming video.", "", LogLevel.INFO);
+                logger.log(toString() + " streaming video.", "", LogLevel.INFO);
                 streamVideo();
                 return;
             case 3:
-                LOGGER.log(toString() + " browsing exercise.", "", LogLevel.INFO);
+                logger.log(toString() + " browsing exercise.", "", LogLevel.INFO);
                 browseExercise();
                 return;
             default:
@@ -76,15 +80,15 @@ public class Client extends Thread{
             URL url = getRandomPageUrl();
             InputStream stream = url.openStream();
             int bytes = readStream(stream);
-            LOGGER.log(toString() + " received " + formatBytes(bytes) + " from page.", "", LogLevel.INFO);
+            logger.log(toString() + " received " + formatBytes(bytes) + " from page.", "", LogLevel.INFO);
             stream.close();
         } catch (Exception e) {
-            LOGGER.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
+            logger.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
         }
     }
 
     private URL getRandomPageUrl() throws MalformedURLException {
-        return new URL("http", HOST, PORT, getRandomPage());
+        return new URL("http", host, port, getRandomPage());
     }
 
     private String getRandomPage(){
@@ -97,15 +101,15 @@ public class Client extends Thread{
             URL url = getRandomVideoUrl();
             InputStream stream = url.openStream();
             int bytes = readStream(stream);
-            LOGGER.log(toString() + " received " + formatBytes(bytes) + " from video.", "", LogLevel.INFO);
+            logger.log(toString() + " received " + formatBytes(bytes) + " from video.", "", LogLevel.INFO);
             stream.close();
         } catch (Exception e) {
-            LOGGER.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
+            logger.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
         }
     }
 
     private URL getRandomVideoUrl() throws MalformedURLException {
-        return new URL("http", HOST, PORT, getRandomVideo());
+        return new URL("http", host, port, getRandomVideo());
     }
 
     private String getRandomVideo(){
@@ -118,15 +122,15 @@ public class Client extends Thread{
             URL url = getRandomExerciseUrl();
             InputStream stream = url.openStream();
             int bytes = readStream(stream);
-            LOGGER.log(toString() + " received " + formatBytes(bytes) + " from exercise.", "", LogLevel.INFO);
+            logger.log(toString() + " received " + formatBytes(bytes) + " from exercise.", "", LogLevel.INFO);
             stream.close();
         } catch (Exception e) {
-            LOGGER.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
+            logger.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
         }
     }
 
     private URL getRandomExerciseUrl() throws MalformedURLException{
-        return new URL("http", HOST, PORT, getRandomExercise());
+        return new URL("http", host, port, getRandomExercise());
     }
 
     private String getRandomExercise() {

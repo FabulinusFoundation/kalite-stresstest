@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -21,6 +22,7 @@ import jfxtras.scene.control.ListSpinner;
 import org.fabulinus.client.Client;
 import org.fabulinus.logging.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,8 +72,9 @@ public class GUI extends Application {
 
         Scene scene = new Scene(vBox, 500, 500);
         primaryStage.setTitle("KA Lite Stress Test");
+        Image img = new Image("file:img/leaf-green.png");
+        primaryStage.getIcons().add(img);
         primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
