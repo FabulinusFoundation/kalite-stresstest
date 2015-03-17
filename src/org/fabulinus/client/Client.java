@@ -1,6 +1,5 @@
 package org.fabulinus.client;
 
-import org.fabulinus.logging.LogEntry;
 import org.fabulinus.logging.LogLevel;
 import org.fabulinus.logging.Logger;
 
@@ -30,42 +29,35 @@ public class Client extends Thread{
     public void run() {
         logger.log("Starting new " + toString(), "", LogLevel.INFO);
         while(!isInterrupted()){
-            Date before = new Date();
-            accessContent();
-            Date after = new Date();
-            long elapsed = after.getTime()-before.getTime();
-            if (elapsed > 5000) {
-                logger.log(toString() + ": " + "response required " + elapsed + "ms.", "", LogLevel.WARN);
+            int duration = accessContent();
+            if (duration < 0) {
+                logger.log(toString() + ": Error while accessing content!", "", LogLevel.ERROR);
+            } else {
+                logger.log(toString() + ": " + "response required " + duration + "s.", "",
+                        (duration < 6 ? LogLevel.INFO : LogLevel.WARN));
             }
             long rndTimeout = calculateTimeout();
-            logger.log(toString() + " sleeping for " + rndTimeout + "ms.", "", LogLevel.DEBUG);
-            try {
-                sleep(rndTimeout);
-            } catch (InterruptedException i) {
-                logger.log(toString() + " interrupted.", "", LogLevel.INFO);
-                interrupt();
-            }
+            logger.log(toString() + " sleeping for " + rndTimeout/1000 + "s.", "", LogLevel.DEBUG);
+            trySleep(rndTimeout);
         }
     }
 
-    private void accessContent() {
+    private int accessContent() {
         int rnd = (int) (Math.floor(Math.random()*3) + 1); // [1..4)
         switch (rnd) {
             case 1:
                 logger.log(toString() + " browsing page.", "", LogLevel.INFO);
-                browsePage();
-                return;
+                return browsePage();
             case 2:
                 logger.log(toString() + " streaming video.", "", LogLevel.INFO);
-                streamVideo();
-                return;
+                return streamVideo();
             case 3:
                 logger.log(toString() + " browsing exercise.", "", LogLevel.INFO);
-                browseExercise();
-                return;
+                return browseExercise();
             default:
                 assert(false);
         }
+        return -1;
     }
 
     private long calculateTimeout() {
@@ -75,16 +67,20 @@ public class Client extends Thread{
     }
 
     //------------------------------- Page -------------------------------//
-    private void browsePage() {
+    private int browsePage() {
+        long start = new Date().getTime();
         try {
             URL url = getRandomPageUrl();
             InputStream stream = url.openStream();
-            int bytes = readStream(stream);
+            long bytes = readStream(stream);
             logger.log(toString() + " received " + formatBytes(bytes) + " from page.", "", LogLevel.INFO);
             stream.close();
         } catch (Exception e) {
             logger.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
+            return -1;
         }
+        long end = new Date().getTime();
+        return (int) ((end-start)/1000);
     }
 
     private URL getRandomPageUrl() throws MalformedURLException {
@@ -92,20 +88,28 @@ public class Client extends Thread{
     }
 
     private String getRandomPage(){
-        return "/math/arithmetic/";
+        return "/learn/khan/humanities/art-history-basics/artists-materials-techniques/";
     }
 
     //------------------------------- Video -------------------------------//
-    private void streamVideo() {
+    private int streamVideo() {
+        long start = new Date().getTime(), end;
         try {
             URL url = getRandomVideoUrl();
             InputStream stream = url.openStream();
-            int bytes = readStream(stream);
-            logger.log(toString() + " received " + formatBytes(bytes) + " from video.", "", LogLevel.INFO);
+            long startS = new Date().getTime();
+            long bytes = readStream(stream);
+            long endS = new Date().getTime();
+            int watchTime = calculateRandomWatchTimeInSeconds(startS, endS, bytes);
+            logger.log(toString() + " received " + formatBytes(bytes) + " from video. Watching " + watchTime + "s.", "", LogLevel.INFO);
+            trySleep(watchTime * 1000);
             stream.close();
+            end = new Date().getTime() - watchTime*1000;
         } catch (Exception e) {
             logger.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
+            return -1;
         }
+        return (int) ((end-start) / 1000);
     }
 
     private URL getRandomVideoUrl() throws MalformedURLException {
@@ -113,20 +117,24 @@ public class Client extends Thread{
     }
 
     private String getRandomVideo(){
-        return "/math/arithmetic/addition-subtraction/basic_addition/v/basic-addition/";
+        return "/content/_LDR1_Prveo.mp4";
     }
 
     //------------------------------- Exercise -------------------------------//
-    private void browseExercise() {
+    private int browseExercise() {
+        long start = new Date().getTime();
         try {
             URL url = getRandomExerciseUrl();
             InputStream stream = url.openStream();
-            int bytes = readStream(stream);
+            long bytes = readStream(stream);
             logger.log(toString() + " received " + formatBytes(bytes) + " from exercise.", "", LogLevel.INFO);
             stream.close();
         } catch (Exception e) {
             logger.log(toString() + " " + e.getLocalizedMessage(), "", LogLevel.ERROR);
+            return -1;
         }
+        long end = new Date().getTime();
+        return (int) ((end - start) / 1000);
     }
 
     private URL getRandomExerciseUrl() throws MalformedURLException{
@@ -134,11 +142,11 @@ public class Client extends Thread{
     }
 
     private String getRandomExercise() {
-        return "/math/arithmetic/addition-subtraction/basic_addition/e/addition_1/";
+        return "/learn/khan/humanities/art-history-basics/artists-materials-techniques/materials-techniques-quiz/art-history-media/";
     }
 
     //------------------------------- General -------------------------------//
-    private int readStream(InputStream stream) throws IOException {
+    private long readStream(InputStream stream) throws IOException {
         int count = 0;
         int read;
         do {
@@ -148,12 +156,31 @@ public class Client extends Thread{
         return count;
     }
 
-    private String formatBytes(int bytes){
+    private String formatBytes(long bytes){
         int unit = 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
-        char pre = "kmgtpe".charAt(exp-1);
+        char pre = "KMGTPE".charAt(exp-1);
         return String.format("%.1f%sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    private long getVideoDurationInSeconds(long bytes){
+        return bytes / (12 * 1024); //approx.
+    }
+
+    private int calculateRandomWatchTimeInSeconds(long start, long end, long bytes){
+        long videoDuration = end-start + getVideoDurationInSeconds(bytes)* 1000;
+        double rndFactor = Math.random();
+        return (int) ((videoDuration * rndFactor) / 1000);
+    }
+
+    private void trySleep(long timeout){
+        try {
+            sleep(timeout);
+        } catch (InterruptedException e) {
+            logger.log(toString() + " interrupted.", "", LogLevel.INFO);
+            interrupt();
+        }
     }
 
     @Override

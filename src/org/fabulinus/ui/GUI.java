@@ -22,7 +22,6 @@ import jfxtras.scene.control.ListSpinner;
 import org.fabulinus.client.Client;
 import org.fabulinus.logging.Logger;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 

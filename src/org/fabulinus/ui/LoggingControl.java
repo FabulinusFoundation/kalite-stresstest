@@ -84,9 +84,7 @@ public class LoggingControl extends VBox implements LogListener {
     @Override
     public void log(LogEntry entry) {
         if (logLevel.value() <= entry.getLogLevel().value()){
-            Platform.runLater(() -> {
-                logEntries.add(entry);
-            });
+            Platform.runLater(() -> logEntries.add(entry));
         }
     }
 }
