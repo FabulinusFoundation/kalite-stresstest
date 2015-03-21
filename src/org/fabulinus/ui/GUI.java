@@ -20,6 +20,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import jfxtras.scene.control.ListSpinner;
 import org.fabulinus.client.Client;
+import org.fabulinus.input.ResourceFileReader;
+import org.fabulinus.input.Resources;
 import org.fabulinus.logging.Logger;
 
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import java.util.List;
  */
 public class GUI extends Application {
     private final Logger logger;
+    private final Resources resources;
     private final List<Thread> clientThreads;
     private final StringProperty hostProperty;
     private final StringProperty portProperty;
@@ -44,6 +47,8 @@ public class GUI extends Application {
 
     public GUI(){
         this.logger = new Logger();
+        this.resources = new ResourceFileReader("resource-input", logger)
+                .readResources();
         this.clientThreads = new ArrayList<>();
         this.clientNumberProperty = new SimpleIntegerProperty(20);
         this.hostProperty = new SimpleStringProperty();
@@ -154,7 +159,7 @@ public class GUI extends Application {
         String host = hostProperty.get();
         int port = Integer.parseInt(portProperty.get());
         for (int i=0; i< clientNumberProperty.get(); i++){
-            Thread client = new Client(host, port, logger, 2000);
+            Thread client = new Client(host, port, resources, logger, 2000);
             clientThreads.add(client);
         }
         clientThreads.forEach(client -> client.start());

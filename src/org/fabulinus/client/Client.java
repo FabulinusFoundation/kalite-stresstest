@@ -1,5 +1,6 @@
 package org.fabulinus.client;
 
+import org.fabulinus.input.Resources;
 import org.fabulinus.logging.LogLevel;
 import org.fabulinus.logging.Logger;
 
@@ -15,12 +16,14 @@ import java.util.Date;
 public class Client extends Thread{
     private final String host;
     private final int port;
+    private final Resources resources;
     private final Logger logger;
     private final long defaultTimeout;
 
-    public Client(String host, int port, Logger logger, long defaultTimeout){
+    public Client(String host, int port, Resources resources, Logger logger, long defaultTimeout){
         this.host = host;
         this.port = port;
+        this.resources = resources;
         this.logger = logger;
         this.defaultTimeout = defaultTimeout;
     }
@@ -88,7 +91,8 @@ public class Client extends Thread{
     }
 
     private String getRandomPage(){
-        return "/learn/khan/humanities/art-history-basics/artists-materials-techniques/";
+        int index = 0;
+        return resources.getPages().get(index);
     }
 
     //------------------------------- Video -------------------------------//
@@ -117,7 +121,8 @@ public class Client extends Thread{
     }
 
     private String getRandomVideo(){
-        return "/content/_LDR1_Prveo.mp4";
+        int index = 0;
+        return resources.getVideos().get(index);
     }
 
     //------------------------------- Exercise -------------------------------//
@@ -142,7 +147,8 @@ public class Client extends Thread{
     }
 
     private String getRandomExercise() {
-        return "/learn/khan/humanities/art-history-basics/artists-materials-techniques/materials-techniques-quiz/art-history-media/";
+        int index = 0;
+        return resources.getExercises().get(index);
     }
 
     //------------------------------- General -------------------------------//
