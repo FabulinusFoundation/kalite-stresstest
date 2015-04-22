@@ -4,3 +4,7 @@ KA-Lite Stress Test is a tool to simulate clients accessing a KA-Lite server (ht
 With KA-Lite Stress Test you can set the IP address, the port, and the number of clients to simulate. It logs what is going on to the user interface, e.g. if a connection times out, etc.
 
 Each client runs in its own thread. Currently, this tool supports only accessing a page, simulation of video streaming is coming soon.
+
+The KA-Lite logo is used under the Creative Common license. The logo is property of the Foundation for Learning Equality.
+
+(c) Copyright 2015 Stichting Fabulinus. Code released under the MIT license.
